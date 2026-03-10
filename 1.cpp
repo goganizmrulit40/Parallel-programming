@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <iomanip>
 
 using namespace std;
 using namespace chrono;
@@ -51,6 +52,8 @@ void writeMatrix(const vector<vector<double>>& matrix, const string& filename) {
 int main() {
     int sizes[] = { 200, 400, 800, 1200, 1600, 2000 };
     int num_sizes = 6;
+
+    ofstream results("results.txt");
     
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
@@ -73,8 +76,16 @@ int main() {
         
         double time = duration<double>(end - start).count();
         
-        cout << time << endl;
+        string filenameC = "C_" + to_string(n) + ".txt";
+        writeMatrix(C, filenameC);
+        
+        long long operations = getOperationsCount(n);
+        
+        results << n << "\t" << fixed << setprecision(3) << time << "\t" << operations << endl;
     }
+
+    results.close();
 }
+
 
 
