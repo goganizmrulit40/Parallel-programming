@@ -42,6 +42,7 @@ void writeMatrix(const vector<vector<double>>& matrix, const string& filename) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             file << matrix[i][j];
+            if (j < n - 1) file << " ";
         }
         file << "; ";
     }
@@ -86,6 +87,7 @@ int main() {
 
     results.close();
 }
+
 
 
 
