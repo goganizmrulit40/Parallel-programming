@@ -35,3 +35,28 @@ def verify_size(n):
     except Exception as e:
         print(f"  ОШИБКА: {e}")
         return False
+
+
+def main():
+    sizes = [200, 400, 800, 1200, 1600, 2000]
+
+    print("ВЕРИФИКАЦИЯ РЕЗУЛЬТАТОВ")
+    print("Формат файлов: числа через пробел, строки разделены \\n")
+
+    results = {}
+    for n in sizes:
+        results[n] = verify_size(n)
+
+    print("ИТОГИ:")
+    for n in sizes:
+        print(f"Размер {n}: {'ВЕРНО' if results[n] else 'ОШИБКА'}")
+
+    if all(results.values()):
+        print("\n ВСЕ РЕЗУЛЬТАТЫ ВЕРНЫ!")
+    else:
+        print("\n ЕСТЬ ОШИБКИ!")
+
+
+if __name__ == "__main__":
+    main()
+    
