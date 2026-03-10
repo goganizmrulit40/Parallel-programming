@@ -2,8 +2,10 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <chrono>
 
 using namespace std;
+using namespace chrono;
 
 // Функция для умножения матриц
 vector<vector<double>> multiply(const vector<vector<double>>& A,
@@ -62,6 +64,17 @@ int main() {
 
         writeMatrix(A, "A_" + to_string(n) + ".txt");
         writeMatrix(B, "B_" + to_string(n) + ".txt");
+
+        auto start = high_resolution_clock::now();
+
+        vector<vector<double>> C = multiply(A, B);
+        
+        auto end = high_resolution_clock::now();
+        
+        double time = duration<double>(end - start).count();
+        
+        cout << time << endl;
     }
 }
+
 
