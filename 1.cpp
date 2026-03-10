@@ -67,7 +67,9 @@ int main() {
     int sizes[] = { 200, 400, 800, 1200, 1600, 2000 };
     int num_sizes = 6;
 
-    ofstream results("results.txt");
+    ofstream results("results.txt", ios::app);
+
+    results << "\n";
     
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
@@ -100,6 +102,7 @@ int main() {
 
     results.close();
 }
+
 
 
 
