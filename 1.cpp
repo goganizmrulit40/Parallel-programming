@@ -34,7 +34,7 @@ void fillRandom(vector<vector<double>>& matrix) {
     }
 }
 
-// Функция для записи матрицы в файл
+// Функция для записи исходных матриц в файл
 void writeMatrix(const vector<vector<double>>& matrix, const string& filename) {
     ofstream file(filename);
     int n = matrix.size();
@@ -42,7 +42,20 @@ void writeMatrix(const vector<vector<double>>& matrix, const string& filename) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             file << matrix[i][j];
-            if (j < n - 1) file << " ";
+        }
+        file << "; ";
+    }
+    file.close();
+}
+
+// Функция для записи результирующей матрицы в файл
+void writeMatrix_C(const vector<vector<double>>& matrix, const string& filename) {
+    ofstream file(filename);
+    int n = matrix.size();
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            file << matrix[i][j] << " ";
         }
         file << "; ";
     }
@@ -78,7 +91,7 @@ int main() {
         double time = duration<double>(end - start).count();
         
         string filenameC = "C_" + to_string(n) + ".txt";
-        writeMatrix(C, filenameC);
+        writeMatrix_C(C, filenameC);
         
         long long operations = getOperationsCount(n);
         
@@ -87,6 +100,7 @@ int main() {
 
     results.close();
 }
+
 
 
 
