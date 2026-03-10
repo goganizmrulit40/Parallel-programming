@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -29,6 +31,20 @@ void fillRandom(vector<vector<double>>& matrix) {
     }
 }
 
+// Функция для записи матрицы в файл
+void writeMatrix(const vector<vector<double>>& matrix, const string& filename) {
+    ofstream file(filename);
+    int n = matrix.size();
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            file << matrix[i][j];
+        }
+        file << "; ";
+    }
+    file.close();
+}
+
 
 int main() {
     int sizes[] = { 200, 400, 800, 1200, 1600, 2000 };
@@ -43,5 +59,9 @@ int main() {
     
         fillRandom(A);
         fillRandom(B);
+
+        writeMatrix(A, "A_" + to_string(n) + ".txt");
+        writeMatrix(B, "B_" + to_string(n) + ".txt");
     }
 }
+
