@@ -1,14 +1,16 @@
-﻿#include <iostream>
+#include <iostream>
 #include <vector>
 #include <fstream>
 #include <string>
 #include <chrono>
 #include <iomanip>
+#include <omp.h>
+#include <ctime>
 
 using namespace std;
 using namespace chrono;
 
-// Структуры данных
+// --------Структуры данных-----------
 // 
 // СД для информации о процессоре
 struct SystemInfo {
@@ -28,8 +30,8 @@ struct ExperimentResult {
     bool correct;
 };
 
-// Функция для умножения матриц
-vector<vector<double>> multiply(const vector<vector<double>>& A,
+// Функция для умножения матриц - последовательное
+vector<vector<double>> multiply_seq(const vector<vector<double>>& A,
     const vector<vector<double>>& B) {
     int n = A.size();
     vector<vector<double>> C(n, vector<double>(n, 0.0));
@@ -42,6 +44,42 @@ vector<vector<double>> multiply(const vector<vector<double>>& A,
         }
     }
     return C;
+}
+
+// Параллельное умножение
+vector<vector<double>> multiply_omp(const vector<vector<double>>& A,
+    const vector<vector<double>>& B, int num_threads) {
+    int n = A.size();
+    vector<vector<double>> C(n, vector<double>(n, 0.0));
+
+    omp_set_num_threads(num_threads);
+
+    #pragma omp parallel for
+    for (int i = 0; i < n; i++) {
+        for (int k = 0; k < n; k++) {
+            double aik = A[i][k];
+            for (int j = 0; j < n; j++) {
+                C[i][j] += aik * B[k][j];
+            }
+        }
+    }
+    return C;
+}
+
+// ----------- Вспомогательные функции --------------
+
+bool checkResult(const vector<vector<double>>& C1,
+    const vector<vector<double>>& C2) {
+    int n = C1.size();
+    double eps = 1e-8;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (abs(C1[i][j] - C2[i][j]) > eps) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 // Функция для заполнения матрицы случайными числами
@@ -99,7 +137,7 @@ int main() {
 
         auto start = high_resolution_clock::now();
 
-        vector<vector<double>> C = multiply(A, B);
+        vector<vector<double>> C = multiply_seq(A, B);
 
         auto end = high_resolution_clock::now();
 
