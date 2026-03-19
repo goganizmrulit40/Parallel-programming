@@ -68,6 +68,7 @@ vector<vector<double>> multiply_omp(const vector<vector<double>>& A,
 
 // ----------- Вспомогательные функции --------------
 
+// Функция проверки корректности результатов
 bool checkResult(const vector<vector<double>>& C1,
     const vector<vector<double>>& C2) {
     int n = C1.size();
@@ -109,6 +110,25 @@ void writeMatrix(const vector<vector<double>>& matrix, const string& filename) {
 // Функция для вычисления объема задачи
 long long getOperationsCount(int n) {
     return 2LL * n * n * n;
+}
+
+// Функция для меток времени
+string getCurrentTime() {
+    time_t now = time(0);
+    struct tm timeinfo;
+    char buffer[80];
+    localtime_s(&timeinfo, &now);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+    return string(buffer);
+}
+
+// Функция для информации о системе
+SystemInfo getSystemInfo() {
+    SystemInfo info;
+    info.logical_processors = omp_get_num_procs();
+    info.physical_cores = info.logical_processors / 2;
+    info.max_threads = omp_get_max_threads();
+    return info;
 }
 
 
