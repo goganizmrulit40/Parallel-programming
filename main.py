@@ -122,6 +122,29 @@ def plot_efficiency_vs_threads(df):
     plt.show()
 
 
+def plot_time_vs_size(df):
+    """График времени от размера матрицы для разного числа потоков"""
+    plt.figure(figsize=(12, 8))
+
+    threads = sorted(df['threads'].unique())
+    colors = plt.cm.plasma(np.linspace(0, 1, len(threads)))
+
+    for th, color in zip(threads, colors):
+        data = df[df['threads'] == th].groupby('size')['time'].mean().reset_index()
+        data = data.sort_values('size')
+        plt.plot(data['size'], data['time'], 'o-',
+                 color=color, linewidth=2, markersize=8,
+                 label=f'{th} потоков')
+
+    plt.xlabel('Размер матрицы', fontsize=12)
+    plt.ylabel('Время выполнения (сек)', fontsize=12)
+    plt.title('Зависимость времени от размера матрицы', fontsize=14)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.savefig('time_vs_size.png', dpi=150, bbox_inches='tight')
+    plt.show()
+    
+
 def main():
     filename = 'results_omp.txt'
     lines = parse_results_file(filename)
@@ -137,6 +160,7 @@ def main():
 
     plot_time_vs_threads(df)
     plot_efficiency_vs_threads(df)
+    plot_time_vs_size(df)
 
 
 if __name__ == '__main__':
