@@ -30,7 +30,7 @@ struct ExperimentResult {
     bool correct;
 };
 
-// Функция для умножения матриц - последовательное
+// Функция для умножения матриц - последовательное умножение
 vector<vector<double>> multiply_seq(const vector<vector<double>>& A,
     const vector<vector<double>>& B) {
     int n = A.size();
@@ -46,7 +46,7 @@ vector<vector<double>> multiply_seq(const vector<vector<double>>& A,
     return C;
 }
 
-// Параллельное умножение
+// Функция для умножения матриц - последовательное умножение
 vector<vector<double>> multiply_omp(const vector<vector<double>>& A,
     const vector<vector<double>>& B, int num_threads) {
     int n = A.size();
@@ -131,6 +131,38 @@ SystemInfo getSystemInfo() {
     return info;
 }
 
+// ----------- Функции для работы с файлами ---------------
+
+// Функция для инициализации файла
+void initResultsFile(const string& filename) {
+    ifstream test_file(filename);
+    bool file_exists = test_file.good();
+    test_file.close();
+
+    ofstream results(filename, ios::app);
+
+    if (!file_exists) {
+        results << "Size\tThreads\tTime\tOperations\tSpeedup\tEfficiency\tCorrect" << endl;
+    }
+    else {
+        results << "\n";
+    }
+
+    SystemInfo info = getSystemInfo();
+    results << "# " << getCurrentTime() << " | Ядра: " << info.physical_cores
+        << " | Потоки: " << info.logical_processors << endl;
+    results.close();
+}
+
+// Функция для сохранения файла
+void saveResult(const string& filename, const ExperimentResult& res) {
+    ofstream results(filename, ios::app);
+    results << res.size << "\t" << res.threads << "\t"
+        << res.time << "\t" << res.operations << "\t"
+        << res.speedup << "\t" << res.efficiency << "\t"
+        << (res.correct ? "OK" : "FAIL") << endl;
+    results.close();
+}
 
 int main() {
     setlocale(LC_ALL, "rus");
