@@ -8,6 +8,26 @@
 using namespace std;
 using namespace chrono;
 
+// Структуры данных
+// 
+// СД для информации о процессоре
+struct SystemInfo {
+    int physical_cores;
+    int logical_processors;
+    int max_threads;
+};
+
+// СД для хранения результатов экспериментов
+struct ExperimentResult {
+    int size;
+    int threads;
+    double time;
+    long long operations;
+    double speedup;
+    double efficiency;
+    bool correct;
+};
+
 // Функция для умножения матриц
 vector<vector<double>> multiply(const vector<vector<double>>& A,
     const vector<vector<double>>& B) {
