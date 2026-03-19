@@ -73,6 +73,29 @@ def parse_results_file(filename):
     return pd.DataFrame(data)
 
 
+def plot_time_vs_threads(df):
+    """График зависимости времени от количества потоков для разных размеров"""
+    plt.figure(figsize=(12, 8))
+
+    sizes = sorted(df['size'].unique())
+    colors = plt.cm.viridis(np.linspace(0, 1, len(sizes)))
+
+    for size, color in zip(sizes, colors):
+        data = df[df['size'] == size].groupby('threads')['time'].mean().reset_index()
+        data = data.sort_values('threads')
+        plt.plot(data['threads'], data['time'], 'o-',
+                 color=color, linewidth=2, markersize=8,
+                 label=f'N={size}')
+
+    plt.xlabel('Количество потоков', fontsize=12)
+    plt.ylabel('Время выполнения (сек)', fontsize=12)
+    plt.title('Зависимость времени выполнения от количества потоков', fontsize=14)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.xticks(sorted(df['threads'].unique()))
+    plt.savefig('time_vs_threads.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
 def main():
     filename = 'results_omp.txt'
     lines = parse_results_file(filename)
@@ -86,7 +109,8 @@ def main():
     print(f"Количество потоков: {sorted(df['threads'].unique())}")
     print(f"Количество запусков: {df['run'].nunique()}")
 
+    plot_time_vs_threads(df)
+
 
 if __name__ == '__main__':
     main()
-  
