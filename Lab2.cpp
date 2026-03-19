@@ -185,42 +185,113 @@ void saveResult(const string& filename, const ExperimentResult& res) {
 
 int main() {
     setlocale(LC_ALL, "rus");
+    srand(time(NULL));
 
+    // Размеры матриц
     int sizes[] = { 200, 400, 800, 1200, 1600, 2000 };
     int num_sizes = 6;
 
-    ofstream results("results.txt", ios::app);
+    // Количество потоков
+    int threads[] = { 1, 2, 4, 6, 8, 12 };
+    int num_threads = 6;
 
-    results << "\n";
+    string filename = "results_omp.txt";
 
+    // Информация о системе
+    SystemInfo sysInfo = getSystemInfo();
+    cout << "=========================================================" << endl;
+    cout << "ПАРАЛЛЕЛЬНОЕ УМНОЖЕНИЕ МАТРИЦ (OpenMP)" << endl;
+    cout << "=========================================================" << endl;
+    cout << "Физические ядра: " << sysInfo.physical_cores << endl;
+    cout << "Логические процессоры: " << sysInfo.logical_processors << endl;
+    cout << "=========================================================" << endl;
+
+    // Инициализация файла
+    initResultsFile(filename);
+
+    // Основной цикл
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
-        cout << "Размер матрицы: " << n << endl;
+        cout << "\n========== РАЗМЕР МАТРИЦЫ: " << n << " ==========" << endl;
 
+        // Создание матриц
         vector<vector<double>> A(n, vector<double>(n));
         vector<vector<double>> B(n, vector<double>(n));
-
         fillRandom(A);
         fillRandom(B);
 
-        writeMatrix(A, "A_" + to_string(n) + ".txt");
-        writeMatrix(B, "B_" + to_string(n) + ".txt");
+        // Прогрев (1 запуск, не учитывается в статистике)
+        vector<vector<double>> C_warm = multiply_omp(A, B, 1);
 
-        auto start = high_resolution_clock::now();
+        // Время для 1 потока (базовое)
+        double base_time = measureTime(A, B, 1, 3);
+        cout << "\n[Базовое время (1 поток)]: " << fixed << setprecision(3) << base_time << " сек" << endl;
 
-        vector<vector<double>> C = multiply_seq(A, B);
+        // Сохраняем результат для 1 потока
+        ExperimentResult res1;
+        res1.size = n;
+        res1.threads = 1;
+        res1.time = base_time;
+        res1.operations = getOperationsCount(n);
+        res1.speedup = 1.0;
+        res1.efficiency = 100.0;
+        res1.correct = true;
+        saveResult(filename, res1);
 
-        auto end = high_resolution_clock::now();
+        // Параллельные эксперименты
+        cout << "\n[Параллельный алгоритм]" << endl;
+        cout << "--------------------------------------------------------" << endl;
+        cout << "Потоки | Время (сек) | Ускорение | Эффективность" << endl;
+        cout << "--------------------------------------------------------" << endl;
 
-        double time = duration<double>(end - start).count();
+        // Вывод для 1 потока
+        cout << "  " << setw(2) << 1 << "    | "
+            << fixed << setprecision(3) << setw(8) << base_time << "   | "
+            << fixed << setprecision(2) << setw(6) << "1.00" << "x   | "
+            << fixed << setprecision(1) << setw(6) << "100.0%" << endl;
 
-        string filenameC = "C_" + to_string(n) + ".txt";
-        writeMatrix(C, filenameC);
+        // Для остальных потоков
+        for (int t = 1; t < num_threads; t++) {
+            int th = threads[t];
 
-        long long operations = getOperationsCount(n);
+            // Проверка корректности
+            vector<vector<double>> C_test = multiply_omp(A, B, th);
+            bool correct = checkResult(multiply_omp(A, B, 1), C_test);
 
-        results << n << "\t" << fixed << setprecision(3) << time << "\t" << operations << endl;
+            // Измерение времени через measureTime
+            double avg_time = measureTime(A, B, th, 3);
+
+            // Ускорение относительно 1 потока
+            double speedup = base_time / avg_time;
+            double efficiency = speedup / th * 100;
+
+            // Вывод
+            cout << "  " << setw(2) << th << "    | "
+                << fixed << setprecision(3) << setw(8) << avg_time << "   | "
+                << fixed << setprecision(2) << setw(6) << speedup << "x   | "
+                << fixed << setprecision(1) << setw(6) << efficiency << "%"
+                << (correct ? "" : "  [ОШИБКА!]") << endl;
+
+            // Сохранение
+            ExperimentResult res;
+            res.size = n;
+            res.threads = th;
+            res.time = avg_time;
+            res.operations = getOperationsCount(n);
+            res.speedup = speedup;
+            res.efficiency = efficiency;
+            res.correct = correct;
+
+            saveResult(filename, res);
+        }
+
+        cout << "--------------------------------------------------------" << endl;
     }
 
-    results.close();
+    cout << "\n=========================================================" << endl;
+    cout << "ЭКСПЕРИМЕНТЫ ЗАВЕРШЕНЫ!" << endl;
+    cout << "Результаты сохранены в " << filename << endl;
+    cout << "=========================================================" << endl;
+
+    return 0;
 }
