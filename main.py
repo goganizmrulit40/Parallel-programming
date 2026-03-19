@@ -20,20 +20,30 @@ def parse_results_file(filename):
         except UnicodeDecodeError:
             continue
 
-    if lines is None:
-        # Если ничего не помогло, читаем в бинарном режиме и заменяем ошибки
-        with open(filename, 'rb') as f:
-            raw_data = f.read()
-        lines = raw_data.decode('utf-8', errors='ignore').split('\n')
-        print("Файл прочитан с игнорированием ошибок кодировки")
+    data = []
+    current_run = None
 
-    return lines
+    for line in lines:
+        line = line.strip()
+
+        # Пропускаем пустые строки
+        if not line:
+            continue
+
+        # Проверяем, является ли строка заголовком запуска
+        if line.startswith('#'):
+            # Извлекаем дату и время (первые 19 символов после #)
+            if len(line) > 20:
+                current_run = line[2:21].strip()
+            continue
+
+    return pd.DataFrame(data)
 
 
 def main():
     filename = 'results_omp.txt'
     lines = parse_results_file(filename)
-    print(f"Прочитано {len(lines)} строк")
+    print(f"Создан DataFrame с {len(df)} записями")
 
 
 if __name__ == '__main__':
