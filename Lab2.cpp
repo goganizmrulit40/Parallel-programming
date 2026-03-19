@@ -68,6 +68,25 @@ vector<vector<double>> multiply_omp(const vector<vector<double>>& A,
 
 // ----------- Вспомогательные функции --------------
 
+// Функция для усреднения результатов
+double measureTime(const vector<vector<double>>&A,
+    const vector<vector<double>>&B,
+    int threads,
+    int repeats = 3) {
+    
+    double total_time = 0.0;
+    
+    for (int r = 0; r < repeats; r++) {
+        auto start = high_resolution_clock::now();
+        vector<vector<double>> C = multiply_omp(A, B, threads);
+        auto end = high_resolution_clock::now();
+        total_time += duration<double>(end - start).count();
+    }
+    
+    return total_time / repeats;
+    
+}
+
 // Функция проверки корректности результатов
 bool checkResult(const vector<vector<double>>& C1,
     const vector<vector<double>>& C2) {
