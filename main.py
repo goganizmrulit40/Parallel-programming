@@ -96,6 +96,32 @@ def plot_time_vs_threads(df):
     plt.savefig('time_vs_threads.png', dpi=150, bbox_inches='tight')
     plt.show()
 
+
+def plot_efficiency_vs_threads(df):
+    """График эффективности от количества потоков"""
+    plt.figure(figsize=(12, 8))
+
+    sizes = sorted(df['size'].unique())
+    colors = plt.cm.viridis(np.linspace(0, 1, len(sizes)))
+
+    for size, color in zip(sizes, colors):
+        data = df[df['size'] == size].groupby('threads')['efficiency'].mean().reset_index()
+        data = data.sort_values('threads')
+        plt.plot(data['threads'], data['efficiency'], 'o-',
+                 color=color, linewidth=2, markersize=8,
+                 label=f'N={size}')
+
+    plt.xlabel('Количество потоков', fontsize=12)
+    plt.ylabel('Эффективность (%)', fontsize=12)
+    plt.title('Эффективность распараллеливания', fontsize=14)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.xticks(sorted(df['threads'].unique()))
+    plt.ylim(0, 120)
+    plt.savefig('efficiency_vs_threads.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+
 def main():
     filename = 'results_omp.txt'
     lines = parse_results_file(filename)
@@ -110,6 +136,7 @@ def main():
     print(f"Количество запусков: {df['run'].nunique()}")
 
     plot_time_vs_threads(df)
+    plot_efficiency_vs_threads(df)
 
 
 if __name__ == '__main__':
