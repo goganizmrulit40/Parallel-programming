@@ -46,7 +46,7 @@ vector<vector<double>> multiply_seq(const vector<vector<double>>& A,
     return C;
 }
 
-// Функция для умножения матриц - последовательное умножение
+// Функция для умножения матриц - параллельное умножение
 vector<vector<double>> multiply_omp(const vector<vector<double>>& A,
     const vector<vector<double>>& B, int num_threads) {
     int n = A.size();
