@@ -66,3 +66,14 @@
 | 1600	 | 92.5%	|73.8%|	54.2%|	55.0%|	38.8%|
 | 2000	 | 93.5%	|78.0%	|58.7%	|50.5%	|42.6%|
 
+## 5. Графики
+## 5.1 Время выполнения от количества потоков
+<img width="1485" height="1055" alt="time_vs_threads" src="https://github.com/user-attachments/assets/531e2bdc-d3f8-4adf-b1b9-da00d44e02d2" />
+
+## 5.2 Эффективность распараллеливания
+<img width="1511" height="1055" alt="efficiency_vs_threads" src="https://github.com/user-attachments/assets/4a28ce33-ace7-4935-a384-4688bd77400c" />
+
+## 5.3 Время выполнения от размера матрицы
+<img width="1485" height="1055" alt="time_vs_size" src="https://github.com/user-attachments/assets/1f26075f-9274-438a-a970-d62d76fa8d9c" />
+
+
