@@ -167,6 +167,29 @@ int main(int argc, char* argv[]) {
 
     int repeats = 3; // количество замеров
 
+    string filename = "results_mpi.txt";
+
+    if (rank == 0) {
+        ifstream check(filename);
+        bool file_exists = check.good();
+        check.close();
+    
+        // Открываем в режиме добавления
+        ofstream file(filename, ios::app);
+    
+        if (!file_exists) {
+            // Если файл новый — пишем заголовок
+            file << "=== Запуск с " << world_size << " процессами ===\n";
+            file << "Размер\tПроцессов\tВремя(сек)\tОбъем задачи\tУскорение\tЭффективность(%)\n";
+        }
+        else {
+            // Если файл уже есть — добавляем разделитель и информацию о новом запуске
+            file << "\n=== Запуск с " << world_size << " процессами ===\n";
+        }
+        file.close();
+
+    }
+    
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
 
@@ -215,6 +238,17 @@ int main(int argc, char* argv[]) {
             cout << "    Ускорение: " << fixed << setprecision(2) << speedup << "x" << endl;
             cout << "    Эффективность: " << fixed << setprecision(1) << efficiency << "%" << endl;
             cout << "    Объём задачи: " << operations << " операций" << endl;
+
+            // Записываем в файл (добавляем строку)
+            ofstream file(filename, ios::app);
+            if (file.is_open()) {
+                file << n << "\t" << world_size << "\t"
+                    << fixed << setprecision(3) << mpi_time << "\t"
+                    << operations << "\t"
+                    << fixed << setprecision(2) << speedup << "\t"
+                    << fixed << setprecision(1) << efficiency << "\n";
+                file.close();
+            }
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
