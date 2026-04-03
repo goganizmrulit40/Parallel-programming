@@ -65,5 +65,15 @@
 | 1600	 |56.0%	|28.3%|	25.2%	|30.0%	|19.8%|
 | 2000	 |59.0%	|44.5%	|42.0%|	32.5%	|22.0%|
 
+## 5. Графики
+### 5.1 Эффективность от размера матрицы
+<img width="1511" height="1055" alt="efficiency_vs_size" src="https://github.com/user-attachments/assets/cb8f27cc-bf5e-4780-a83b-9a55c0247fe5" />
+
+### 5.2 Эффективность распараллеливания
+<img width="1511" height="1055" alt="efficiency_vs_processes" src="https://github.com/user-attachments/assets/21227d55-c178-403d-88ca-db0f54a03f00" />
+
+### 5.3 Время выполнения от размера матрицы
+<img width="1485" height="1055" alt="time_vs_size" src="https://github.com/user-attachments/assets/d866d19f-7f3d-44eb-80f3-5a35844dbd16" />
+
 
 
