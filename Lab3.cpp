@@ -10,7 +10,7 @@ using namespace std;
 using namespace chrono;
 
 // Функция для умножения матриц - последовательное умножение
-vector<vector<double>> multiply(const vector<vector<double>>& A,
+vector<vector<double>> multiply_seq(const vector<vector<double>>& A,
     const vector<vector<double>>& B){
     int n = A.size();
     vector<vector<double>> C(n, vector<double>(n, 0.0));
@@ -165,9 +165,7 @@ int main(int argc, char* argv[]) {
     int sizes[] = { 200, 400, 800, 1200, 1600, 2000 };
     int num_sizes = 6;
 
-    if (rank == 0) {
-        cout << "Количество процессов: " << world_size << endl;
-    }
+    int repeats = 3; // количество замеров
 
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
@@ -177,18 +175,46 @@ int main(int argc, char* argv[]) {
         }
 
         vector<vector<double>> A, B;
-
+        double seq_time = 0.0;
+        
         if (rank == 0) {
             A.resize(n, vector<double>(n));
             B.resize(n, vector<double>(n));
             fillRandom(A);
             fillRandom(B);
+        
+            // Последовательное время (классический алгоритм)
+            cout << "  [Последовательный алгоритм]" << endl;
+            double total_seq = 0.0;
+            for (int r = 0; r < repeats; r++) {
+                auto start = high_resolution_clock::now();
+                multiply_seq(A, B);
+                auto end = high_resolution_clock::now();
+                total_seq += duration<double>(end - start).count();
+            }
+            seq_time = total_seq / repeats;
+            cout << "    Время: " << fixed << setprecision(3) << seq_time << " сек" << endl;
         }
-
-        double mpi_time = multiply_mpi(A, B, world_size, rank, n);
-
+        
+        MPI_Bcast(&seq_time, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        
+        // Параллельное умножение с усреднением
+        double total_mpi = 0.0;
+        for (int r = 0; r < repeats; r++) {
+            total_mpi += multiply_mpi(A, B, world_size, rank, n);
+        }
+        double mpi_time = total_mpi / repeats;
+        
         if (rank == 0) {
-            cout << "  Время: " << fixed << setprecision(3) << mpi_time << " сек" << endl;
+            double speedup = seq_time / mpi_time;
+            double efficiency = speedup / world_size * 100;
+            long long operations = getOperationsCount(n);
+            
+            cout << "  [Параллельный алгоритм]" << endl;
+            cout << "    Время: " << fixed << setprecision(3) << mpi_time << " сек" << endl;
+            cout << "    Ускорение: " << fixed << setprecision(2) << speedup << "x" << endl;
+            cout << "    Эффективность: " << fixed << setprecision(1) << efficiency << "%" << endl;
+            cout << "    Объём задачи: " << operations << " операций" << endl;
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
