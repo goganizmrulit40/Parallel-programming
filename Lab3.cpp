@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <iomanip>
+#include <mpi.h>
 
 using namespace std;
 using namespace chrono;
@@ -34,64 +35,69 @@ void fillRandom(vector<vector<double>>& matrix) {
     }
 }
 
-// Функция для записи матриц в файл
-void writeMatrix(const vector<vector<double>>& matrix, const string& filename) {
-    ofstream file(filename);
-    int n = matrix.size();
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            file << matrix[i][j] << " ";
-        }
-        file << endl;
-    }
-    file.close();
-}
-
 // Функция для вычисления объема задачи
 long long getOperationsCount(int n) {
     return 2LL * n * n * n;
 }
 
+// Параллельное умножение - заглушка
+double multiply_mpi(const vector<vector<double>>& A,
+    const vector<vector<double>>& B,
+    int size, int rank, int n) {
+    
+    double time = 0.0;
+    if (rank == 0) {
+        auto start = high_resolution_clock::now();
+        multiply_seq(A, B);
+        auto end = high_resolution_clock::now();
+        time = duration<double>(end - start).count();
+    }
+    return time;
+}
 
-int main(){
+
+int main(int argc, char* argv[]) {
     setlocale(LC_ALL, "rus");
+    srand(time(NULL));
+
+    MPI_Init(&argc, &argv);
+
+    int rank, world_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     int sizes[] = { 200, 400, 800, 1200, 1600, 2000 };
     int num_sizes = 6;
 
-    ofstream results("results.txt", ios::app);
-
-    results << "\n";
+    if (rank == 0) {
+        cout << "Количество процессов: " << world_size << endl;
+    }
 
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
-        cout << "Размер матрицы: " << n << endl;
 
-        vector<vector<double>> A(n, vector<double>(n));
-        vector<vector<double>> B(n, vector<double>(n));
+        if (rank == 0) {
+            cout << "\n========== РАЗМЕР МАТРИЦЫ: " << n << " ==========" << endl;
+        }
 
-        fillRandom(A);
-        fillRandom(B);  
+        vector<vector<double>> A, B;
 
-        writeMatrix(A, "A_" + to_string(n) + ".txt");
-        writeMatrix(B, "B_" + to_string(n) + ".txt");
+        if (rank == 0) {
+            A.resize(n, vector<double>(n));
+            B.resize(n, vector<double>(n));
+            fillRandom(A);
+            fillRandom(B);
+        }
 
-        auto start = high_resolution_clock::now();
+        double mpi_time = multiply_mpi(A, B, world_size, rank, n);
 
-        vector<vector<double>> C = multiply(A, B);
+        if (rank == 0) {
+            cout << "  Время: " << fixed << setprecision(3) << mpi_time << " сек" << endl;
+        }
 
-        auto end = high_resolution_clock::now();
-
-        double time = duration<double>(end - start).count();
-
-        string filenameC = "C_" + to_string(n) + ".txt";
-        writeMatrix(C, filenameC);
-
-        long long operations = getOperationsCount(n);
-
-        results << n << "\t" << fixed << setprecision(3) << time << "\t" << operations << endl;
+        MPI_Barrier(MPI_COMM_WORLD);
     }
-    
-    results.close();
+
+    MPI_Finalize();
+    return 0;
 }
