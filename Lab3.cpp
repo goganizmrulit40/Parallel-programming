@@ -9,7 +9,7 @@
 using namespace std;
 using namespace chrono;
 
-// Функция для умножения матриц
+// Функция для умножения матриц - последовательное умножение
 vector<vector<double>> multiply(const vector<vector<double>>& A,
     const vector<vector<double>>& B){
     int n = A.size();
@@ -40,19 +40,115 @@ long long getOperationsCount(int n) {
     return 2LL * n * n * n;
 }
 
-// Параллельное умножение - заглушка
+// Параллельное умножение с MPI (оптимизированный алгоритм i-k-j)
 double multiply_mpi(const vector<vector<double>>& A,
     const vector<vector<double>>& B,
     int size, int rank, int n) {
-    
-    double time = 0.0;
+
+    vector<double> B_flat(n * n, 0.0);
+
     if (rank == 0) {
-        auto start = high_resolution_clock::now();
-        multiply_seq(A, B);
-        auto end = high_resolution_clock::now();
-        time = duration<double>(end - start).count();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                B_flat[i * n + j] = B[i][j];
+            }
+        }
     }
-    return time;
+
+    MPI_Bcast(B_flat.data(), n * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    vector<vector<double>> B_mat(n, vector<double>(n));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            B_mat[i][j] = B_flat[i * n + j];
+        }
+    }
+
+    int rows_per_proc = n / size;
+    int remainder = n % size;
+    int local_rows = rows_per_proc + (rank < remainder ? 1 : 0);
+
+    vector<vector<double>> A_local(local_rows, vector<double>(n));
+
+    if (rank == 0) {
+        for (int i = 0; i < local_rows; i++) {
+            for (int j = 0; j < n; j++) {
+                A_local[i][j] = A[i][j];
+            }
+        }
+
+        int offset = local_rows;
+        for (int p = 1; p < size; p++) {
+            int p_rows = rows_per_proc + (p < remainder ? 1 : 0);
+            vector<double> flat_rows(p_rows * n);
+            for (int i = 0; i < p_rows; i++) {
+                for (int j = 0; j < n; j++) {
+                    flat_rows[i * n + j] = A[offset + i][j];
+                }
+            }
+            MPI_Send(flat_rows.data(), p_rows * n, MPI_DOUBLE, p, 0, MPI_COMM_WORLD);
+            offset += p_rows;
+        }
+    }
+    else {
+        vector<double> flat_rows(local_rows * n);
+        MPI_Recv(flat_rows.data(), local_rows * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for (int i = 0; i < local_rows; i++) {
+            for (int j = 0; j < n; j++) {
+                A_local[i][j] = flat_rows[i * n + j];
+            }
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    double start_time = MPI_Wtime();
+
+    vector<vector<double>> C_local(local_rows, vector<double>(n, 0.0));
+    for (int i = 0; i < local_rows; i++) {
+        for (int k = 0; k < n; k++) {
+            double aik = A_local[i][k];
+            for (int j = 0; j < n; j++) {
+                C_local[i][j] += aik * B_mat[k][j];
+            }
+        }
+    }
+
+    if (rank == 0) {
+        vector<vector<double>> C(n, vector<double>(n, 0.0));
+
+        for (int i = 0; i < local_rows; i++) {
+            for (int j = 0; j < n; j++) {
+                C[i][j] = C_local[i][j];
+            }
+        }
+
+        int offset = local_rows;
+        for (int p = 1; p < size; p++) {
+            int p_rows = rows_per_proc + (p < remainder ? 1 : 0);
+            vector<double> flat_rows(p_rows * n);
+            MPI_Recv(flat_rows.data(), p_rows * n, MPI_DOUBLE, p, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            for (int i = 0; i < p_rows; i++) {
+                for (int j = 0; j < n; j++) {
+                    C[offset + i][j] = flat_rows[i * n + j];
+                }
+            }
+            offset += p_rows;
+        }
+
+        double end_time = MPI_Wtime();
+        return end_time - start_time;
+    }
+    else {
+        vector<double> flat_rows(local_rows * n);
+        for (int i = 0; i < local_rows; i++) {
+            for (int j = 0; j < n; j++) {
+                flat_rows[i * n + j] = C_local[i][j];
+            }
+        }
+        MPI_Send(flat_rows.data(), local_rows * n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+        return 0.0;
+    }
 }
 
 
