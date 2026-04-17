@@ -103,16 +103,60 @@ int main() {
         int n = sizes[s];
         cout << "\n========== РАЗМЕР МАТРИЦЫ: " << n << " ==========" << endl;
 
+        // Создание матриц
         vector<vector<double>> A(n, vector<double>(n));
         vector<vector<double>> B(n, vector<double>(n));
         fillRandom(A);
         fillRandom(B);
 
+        // Последовательное время
+        cout << "  [Последовательный алгоритм]" << endl;
         auto start_seq = high_resolution_clock::now();
         vector<vector<double>> C_seq = multiply_seq(A, B);
         auto end_seq = high_resolution_clock::now();
         double seq_time = duration<double>(end_seq - start_seq).count();
         cout << "  Время: " << fixed << setprecision(3) << seq_time << " сек" << endl;
+
+        // Подготовка данных для CUDA
+        double* h_A = flattenMatrix(A);
+        double* h_B = flattenMatrix(B);
+        double* h_C = new double[n * n];
+
+        double* d_A, * d_B, * d_C;
+        cudaMalloc(&d_A, n * n * sizeof(double));
+        cudaMalloc(&d_B, n * n * sizeof(double));
+        cudaMalloc(&d_C, n * n * sizeof(double));
+        
+        cudaMemcpy(d_A, h_A, n * n * sizeof(double), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_B, h_B, n * n * sizeof(double), cudaMemcpyHostToDevice);
+
+         dim3 threadsPerBlock(16, 16);
+         dim3 numBlocks((n + 15) / 16, (n + 15) / 16);
+         
+         multiply_cuda_kernel<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, n);
+         cudaDeviceSynchronize();
+         
+         cudaMemcpy(h_C, d_C, n * n * sizeof(double), cudaMemcpyDeviceToHost);
+         
+         // Проверка корректности
+         vector<vector<double>> C_cuda(n, vector<double>(n));
+         for (int i = 0; i < n; i++) {
+             for (int j = 0; j < n; j++) {
+                 C_cuda[i][j] = h_C[i * n + j];
+             }
+         }
+         
+         bool correct = compareResults(C_seq, C_cuda);
+         cout << "  Проверка корректности: " << (correct ? "OK" : "ERROR") << endl;
+         
+         // Очистка памяти
+         delete[] h_A;
+         delete[] h_B;
+         delete[] h_C;
+         cudaFree(d_A);
+         cudaFree(d_B);
+         cudaFree(d_C);
+
     }
 
     return 0;
