@@ -37,6 +37,7 @@ __global__ void multiply_cuda_kernel(const double* A, const double* B, double* C
     }
 }
 
+// ФУНКЦИИ ДЛЯ РАБОТЫ С МАТРИЦАМИ
 void fillRandom(vector<vector<double>>& matrix) {
     int n = (int)matrix.size();
     for (int i = 0; i < n; i++) {
@@ -48,6 +49,31 @@ void fillRandom(vector<vector<double>>& matrix) {
 
 long long getOperationsCount(int n) {
     return 2LL * n * n * n;
+}
+
+double* flattenMatrix(const vector<vector<double>>& matrix) {
+    int n = (int)matrix.size();
+    double* flat = new double[n * n];
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            flat[i * n + j] = matrix[i][j];
+        }
+    }
+    return flat;
+}
+
+bool compareResults(const vector<vector<double>>& C1,
+    const vector<vector<double>>& C2) {
+    int n = (int)C1.size();
+    double eps = 1e-8;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (abs(C1[i][j] - C2[i][j]) > eps) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 int main() {
