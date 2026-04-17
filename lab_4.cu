@@ -184,7 +184,16 @@ int main() {
                 << fixed << setprecision(3) << setw(8) << avg_time << "   | "
                 << setw(6) << fixed << setprecision(2) << speedup << "x   | "
                 << setw(6) << fixed << setprecision(1) << efficiency << "%" << endl;
-            
+
+            // Запись результатов в файл
+            ofstream file("results_cuda.txt", ios::app);
+            file << n << "\t" << block_configs[cfg].name << "\t"
+                << fixed << setprecision(3) << avg_time << "\t"
+                << operations << "\t"
+                << fixed << setprecision(2) << speedup << "\t"
+                << fixed << setprecision(1) << efficiency << "\n";
+            file.close();
+        }
                     
          cudaMemcpy(h_C, d_C, n * n * sizeof(double), cudaMemcpyDeviceToHost);
          
