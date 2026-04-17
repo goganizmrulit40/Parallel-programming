@@ -23,6 +23,20 @@ vector<vector<double>> multiply_seq(const vector<vector<double>>& A,
     return C;
 }
 
+// CUDA ЯДРО
+__global__ void multiply_cuda_kernel(const double* A, const double* B, double* C, int n) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (row < n && col < n) {
+        double sum = 0.0;
+        for (int k = 0; k < n; k++) {
+            sum += A[row * n + k] * B[k * n + col];
+        }
+        C[row * n + col] = sum;
+    }
+}
+
 void fillRandom(vector<vector<double>>& matrix) {
     int n = (int)matrix.size();
     for (int i = 0; i < n; i++) {
