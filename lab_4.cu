@@ -95,9 +95,24 @@ int main() {
     }
     cout << "=========================================================" << endl;
 
-
+    // Размеры матриц
     int sizes[] = { 200, 400, 800, 1200, 1600, 2000 };
     int num_sizes = 6;
+
+    // Конфигурации блоков
+    struct BlockConfig {
+        int threads_x;
+        int threads_y;
+        string name;
+    };
+    
+    BlockConfig block_configs[] = {
+        {16, 16, "16x16"},
+        {32, 32, "32x32"},
+        {16, 32, "16x32"},
+        {32, 16, "32x16"}
+    };
+    int num_configs = 4;
 
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
@@ -130,38 +145,41 @@ int main() {
         cudaMemcpy(d_A, h_A, n * n * sizeof(double), cudaMemcpyHostToDevice);
         cudaMemcpy(d_B, h_B, n * n * sizeof(double), cudaMemcpyHostToDevice);
 
-         dim3 threadsPerBlock(16, 16);
-         dim3 numBlocks((n + 15) / 16, (n + 15) / 16);
-         
-         multiply_cuda_kernel<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, n);
-         cudaDeviceSynchronize();
+        for (int cfg = 0; cfg < num_configs; cfg++) {
 
-        cudaEvent_t start, stop;
-        cudaEventCreate(&start);
-        cudaEventCreate(&stop);
-        
-        cudaEventRecord(start);
-        multiply_cuda_kernel << <numBlocks, threadsPerBlock >> > (d_A, d_B, d_C, n);
-        cudaEventRecord(stop);
-        cudaEventSynchronize(stop);
-        
-        float milliseconds;
-        cudaEventElapsedTime(&milliseconds, start, stop);
-        total_time += milliseconds / 1000.0;
-        
-        cudaEventDestroy(start);
-        cudaEventDestroy(stop);
+            dim3 threadsPerBlock(16, 16);
+            dim3 numBlocks((n + 15) / 16, (n + 15) / 16);
 
-        double avg_time = total_time / repeats;
-        double speedup = seq_time / avg_time;
-        double efficiency = speedup / (threadsPerBlock.x * threadsPerBlock.y) * 100;
-        
-        cout << "  " << setw(10) << block_configs[cfg].name << " | "
-            << fixed << setprecision(3) << setw(8) << avg_time << "   | "
-            << setw(6) << fixed << setprecision(2) << speedup << "x   | "
-            << setw(6) << fixed << setprecision(1) << efficiency << "%" << endl;
-        
-                
+            // Прогрев
+            multiply_cuda_kernel<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, n);
+            cudaDeviceSynchronize();
+    
+            cudaEvent_t start, stop;
+            cudaEventCreate(&start);
+            cudaEventCreate(&stop);
+            
+            cudaEventRecord(start);
+            multiply_cuda_kernel << <numBlocks, threadsPerBlock >> > (d_A, d_B, d_C, n);
+            cudaEventRecord(stop);
+            cudaEventSynchronize(stop);
+            
+            float milliseconds;
+            cudaEventElapsedTime(&milliseconds, start, stop);
+            total_time += milliseconds / 1000.0;
+            
+            cudaEventDestroy(start);
+            cudaEventDestroy(stop);
+    
+            double avg_time = total_time / repeats;
+            double speedup = seq_time / avg_time;
+            double efficiency = speedup / (threadsPerBlock.x * threadsPerBlock.y) * 100;
+            
+            cout << "  " << setw(10) << block_configs[cfg].name << " | "
+                << fixed << setprecision(3) << setw(8) << avg_time << "   | "
+                << setw(6) << fixed << setprecision(2) << speedup << "x   | "
+                << setw(6) << fixed << setprecision(1) << efficiency << "%" << endl;
+            
+                    
          cudaMemcpy(h_C, d_C, n * n * sizeof(double), cudaMemcpyDeviceToHost);
          
          // Проверка корректности
