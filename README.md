@@ -28,3 +28,23 @@
 |Ускорение|	S = T₁ / Tₙ|	Во сколько раз быстрее с n потоками|
 |Эффективность|	E = S / n × 100%|Насколько эффективно используются потоки|
 |Объём задачи	|2 × n³|	Количество операций|
+
+## 3.  Характеристики GPU
+|Параметр	|Значение|
+|--------|-----------|
+|GPU	|NVIDIA GeForce RTX 3060 Laptop GPU|
+|CUDA |3840 ядер|
+|Макс. потоков на блок	|1024|
+
+## 4. Настройка CUDA в Visual Studio
+Скачаем и установим CUDA Toolkit 13.2 для Windows 10.
+### 4.1 Настройка Visual Studio
+- Свойства проекта → CUDA C/C++ → General → CUDA Toolkit Custom Dir: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\13.2
+- C/C++ → General → Additional Include Directories: добавим $(CUDA_PATH)\include
+- Linker → General → Additional Library Directories: добавим $(CUDA_PATH)\lib\x64
+- Linker → Input → Additional Dependencies: добавим cudart.lib
+
+
+
+
+
