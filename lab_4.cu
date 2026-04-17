@@ -3,6 +3,7 @@
 #include <vector>
 #include <chrono>
 #include <iomanip>
+#include <cuda_runtime.h>
 
 using namespace std;
 using namespace chrono;
@@ -38,6 +39,22 @@ long long getOperationsCount(int n) {
 int main() {
     setlocale(LC_ALL, "rus");
     srand((unsigned int)time(NULL));
+
+    // Информация о GPU
+    int deviceCount;
+    cudaGetDeviceCount(&deviceCount);
+    
+    cout << "=========================================================" << endl;
+    cout << "ПАРАЛЛЕЛЬНОЕ УМНОЖЕНИЕ МАТРИЦ (CUDA)" << endl;
+    cout << "=========================================================" << endl;
+    
+    for (int device = 0; device < deviceCount; device++) {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, device);
+        cout << "GPU: " << prop.name << endl;
+    }
+    cout << "=========================================================" << endl;
+
 
     int sizes[] = { 200, 400, 800, 1200, 1600, 2000 };
     int num_sizes = 6;
