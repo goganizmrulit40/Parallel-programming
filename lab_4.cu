@@ -153,22 +153,28 @@ int main() {
             // Прогрев
             multiply_cuda_kernel<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, n);
             cudaDeviceSynchronize();
-    
-            cudaEvent_t start, stop;
-            cudaEventCreate(&start);
-            cudaEventCreate(&stop);
-            
-            cudaEventRecord(start);
-            multiply_cuda_kernel << <numBlocks, threadsPerBlock >> > (d_A, d_B, d_C, n);
-            cudaEventRecord(stop);
-            cudaEventSynchronize(stop);
-            
-            float milliseconds;
-            cudaEventElapsedTime(&milliseconds, start, stop);
-            total_time += milliseconds / 1000.0;
-            
-            cudaEventDestroy(start);
-            cudaEventDestroy(stop);
+
+            // Замер времени (3 замера)
+            double total_time = 0.0;
+            int repeats = 3;
+
+            for (int r = 0; r < repeats; r++) {
+                cudaEvent_t start, stop;
+                cudaEventCreate(&start);
+                cudaEventCreate(&stop);
+                
+                cudaEventRecord(start);
+                multiply_cuda_kernel << <numBlocks, threadsPerBlock >> > (d_A, d_B, d_C, n);
+                cudaEventRecord(stop);
+                cudaEventSynchronize(stop);
+                
+                float milliseconds;
+                cudaEventElapsedTime(&milliseconds, start, stop);
+                total_time += milliseconds / 1000.0;
+                
+                cudaEventDestroy(start);
+                cudaEventDestroy(stop);
+            }
     
             double avg_time = total_time / repeats;
             double speedup = seq_time / avg_time;
