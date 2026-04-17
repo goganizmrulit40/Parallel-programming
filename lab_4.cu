@@ -8,6 +8,7 @@
 using namespace std;
 using namespace chrono;
 
+// ПОСЛЕДОВАТЕЛЬНЫЙ АЛГОРИТМ
 vector<vector<double>> multiply_seq(const vector<vector<double>>& A,
     const vector<vector<double>>& B) {
     int n = (int)A.size();
@@ -114,6 +115,12 @@ int main() {
     };
     int num_configs = 4;
 
+    // Файл для результатов
+    ofstream results("results_cuda.txt", ios::app);
+    results << "\n=== Результаты экспериментов CUDA ===\n";
+    results << "Размер\tКонфигурация\tВремя(сек)\tОбъем задачи\tУскорение\tЭффективность(%)\n";
+    results.close();
+
     for (int s = 0; s < num_sizes; s++) {
         int n = sizes[s];
         cout << "\n========== РАЗМЕР МАТРИЦЫ: " << n << " ==========" << endl;
@@ -132,6 +139,9 @@ int main() {
         double seq_time = duration<double>(end_seq - start_seq).count();
         cout << "  Время: " << fixed << setprecision(3) << seq_time << " сек" << endl;
 
+        // Объём задачи
+        long long operations = getOperationsCount(n);
+
         // Подготовка данных для CUDA
         double* h_A = flattenMatrix(A);
         double* h_B = flattenMatrix(B);
@@ -145,10 +155,16 @@ int main() {
         cudaMemcpy(d_A, h_A, n * n * sizeof(double), cudaMemcpyHostToDevice);
         cudaMemcpy(d_B, h_B, n * n * sizeof(double), cudaMemcpyHostToDevice);
 
-        for (int cfg = 0; cfg < num_configs; cfg++) {
+        // Тестирование конфигураций
+        cout << "\n  [Параллельный алгоритм (CUDA)]" << endl;
+        cout << "--------------------------------------------------------" << endl;
+        cout << "Конфигурация | Время (сек) | Ускорение | Эффективность" << endl;
+        cout << "--------------------------------------------------------" << endl;
 
-            dim3 threadsPerBlock(16, 16);
-            dim3 numBlocks((n + 15) / 16, (n + 15) / 16);
+        for (int cfg = 0; cfg < num_configs; cfg++) {
+            dim3 threadsPerBlock(block_configs[cfg].threads_x, block_configs[cfg].threads_y);
+            dim3 numBlocks((n + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                (n + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
             // Прогрев
             multiply_cuda_kernel<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, n);
@@ -194,29 +210,36 @@ int main() {
                 << fixed << setprecision(1) << efficiency << "\n";
             file.close();
         }
-                    
-         cudaMemcpy(h_C, d_C, n * n * sizeof(double), cudaMemcpyDeviceToHost);
+
+        cout << "--------------------------------------------------------" << endl;
+
+        cudaMemcpy(h_C, d_C, n * n * sizeof(double), cudaMemcpyDeviceToHost);
          
-         // Проверка корректности
-         vector<vector<double>> C_cuda(n, vector<double>(n));
-         for (int i = 0; i < n; i++) {
-             for (int j = 0; j < n; j++) {
-                 C_cuda[i][j] = h_C[i * n + j];
-             }
-         }
+        // Проверка корректности
+        vector<vector<double>> C_cuda(n, vector<double>(n));
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                C_cuda[i][j] = h_C[i * n + j];
+            }
+        }
          
-         bool correct = compareResults(C_seq, C_cuda);
-         cout << "  Проверка корректности: " << (correct ? "OK" : "ERROR") << endl;
+        bool correct = compareResults(C_seq, C_cuda);
+        cout << "  Проверка корректности: " << (correct ? "OK" : "ERROR") << endl;
          
-         // Очистка памяти
-         delete[] h_A;
-         delete[] h_B;
-         delete[] h_C;
-         cudaFree(d_A);
-         cudaFree(d_B);
-         cudaFree(d_C);
+        // Очистка памяти
+        delete[] h_A;
+        delete[] h_B;
+        delete[] h_C;
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C);
 
     }
 
+     cout << "\n=========================================================" << endl;
+     cout << "ЭКСПЕРИМЕНТЫ ЗАВЕРШЕНЫ!" << endl;
+     cout << "Результаты сохранены в results_cuda.txt" << endl;
+     cout << "=========================================================" << endl;
+    
     return 0;
 }
