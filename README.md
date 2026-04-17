@@ -77,5 +77,15 @@
 | 1600	 |66%|	23%	|45%|	44%|
 | 2000	 |	120%|	36%	|70%	|66%|
 
+## 5. Графики
+### 5.1 Ускорение относительно последовательной версии (CPU)
+<img width="1511" height="1055" alt="cuda_speedup_vs_size" src="https://github.com/user-attachments/assets/292b8498-19b1-4c19-83fb-c1dfc2ef1bbf" />
+
+### 5.2 Эффективность использования GPU
+<img width="1511" height="1055" alt="cuda_efficiency_vs_size" src="https://github.com/user-attachments/assets/be5e1055-25e3-42cd-830e-b33a866517b9" />
+
+### 5.3 Ускорение для матрицы 2000х2000
+<img width="1279" height="824" alt="cuda_comparison_2000" src="https://github.com/user-attachments/assets/53563141-3226-464b-97e4-259ac345eb8f" />
+
 
 
