@@ -16,3 +16,15 @@
 |Версия Intel Parallel Studio	|XE 2016 (build 460803)|
 |Планировщик	|Slurm|
 |Утилиты	|sbatch, squeue, scancel|
+
+## 3. Как выполнялась работа
+1) Подключимся к кластеру:
+- login as: 2025-00007
+- 2025-00007@sk.ssau.ru's password:
+2) После этого через mkkdir создадим рабочую директорию.
+3) Создадим файл main.cpp с кодом из 3 л.р.
+4) Генерируем матрицы
+5) Настроем окружение Intel:
+  - source /soft/intel/parallel_studio_xe_2016.3.067/bin/psxevars.sh intel64
+6) Скомпилируем нашу программу:
+- mpiicpc -O3 -std=c++11 main.cpp -o matrix_mpi
