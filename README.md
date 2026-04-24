@@ -155,3 +155,15 @@ Intel(R) Advisor XE 2016 (build 463413)
 | 1200	 |10.392	|0.297|	34.95×|	436.9%|	3.456×10⁹|
 | 1600	 |28.502	|0.727|	39.23×	|490.4%	|8.192×10⁹|
 | 2000	 | 50.103|	1.400|	35.79×|	447.3%|	1.6×10¹⁰|
+
+## 5. Графики
+### 5.1 Ускорение параллельного алгоритма относительно последовательного
+<img width="2964" height="1764" alt="graph_speedup" src="https://github.com/user-attachments/assets/66792e5d-1bda-4e31-a952-bafc740f54e4" />
+
+### 5.2 Эффективность распараллеливания
+<img width="2964" height="1764" alt="graph_efficiency" src="https://github.com/user-attachments/assets/5e7efe5e-c4e5-4532-82a3-c80c74cef298" />
+
+### 5.3 Зависимость объёма вычислений от размера матрицы
+<img width="2964" height="1762" alt="graph_operations" src="https://github.com/user-attachments/assets/3872b14a-a33b-41d8-ac9c-911ce78cfd3e" />
+
+
